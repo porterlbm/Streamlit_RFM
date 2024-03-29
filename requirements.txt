@@ -5,5 +5,5 @@ matplotlib
 seaborn
 scikit-learn
 squarify
-plotly.express as px
+plotly
 pickle
