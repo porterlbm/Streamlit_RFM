@@ -7,15 +7,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import squarify
 import plotly.express as px
+import ipywidgets as widgets
 
 # ----- Page setting
-st.set_page_config(page_title="My App", page_icon=":👥:", layout="centered")
+st.set_page_config(page_title="Customer Segment", page_icon=":👥:", layout="centered")
 st.image("images/Customer segment.jpg")
 st.title("Data Science Project")
 st.header("Customer Segmentation in Online Retail")
 st.write("""
          #### 👩🏻‍🏫 Lecturer: Khuat Thuy Phuong ####
-         #### 👥 Team: Huynh Van Tai - Tran The Lam ####
+         #### 🏫 Team: Huynh Van Tai - Tran The Lam ####
          """)
 home = """
 
@@ -55,6 +56,7 @@ with open('./models/kmean_model.pkl', 'rb') as file:
     model_kmeans_lds6 = pickle.load(file)
 scaler = joblib.load('models/scaler.pkl')
 
+# Remove outlier
 import pandas as pd
 def remove_outliers_iqr(df, X):
     for col in X:
@@ -69,6 +71,7 @@ def remove_outliers_iqr(df, X):
         if outliers_.shape[0] > 0:
             df.drop(outliers_.index, axis=0, inplace=True)
 
+# Clean dataset
 def get_dataset_clean(data1):
     # Check if data1 is a DataFrame
     if not isinstance(data1, pd.DataFrame):
@@ -86,10 +89,45 @@ def get_dataset_clean(data1):
     # Replace zero or null UnitPrice with mode
     data1['UnitPrice'] = data1.apply(lambda row: unitprice_mode[row['StockCode']] if row['UnitPrice'] == 0 or pd.isnull(row['UnitPrice']) else row['UnitPrice'], axis=1)
     # Convert InvoiceDate to datetime and extract date
+    data1['X'] = pd.to_datetime(data1['InvoiceDate'], format='%d-%m-%Y %H:%M')
     data1['InvoiceDate'] = pd.to_datetime(data1['InvoiceDate'], format='%d-%m-%Y %H:%M').dt.date
+    data1['InvoiceDate'] = data1['X'].dt.date
+    data1['Year'] = data1['X'].dt.year
+    data1['Month'] = data1['X'].dt.month
+    data1['Day'] = data1['X'].dt.day_name()
+    data1['Hour'] = data1['X'].dt.hour
+    data1 = data1.drop(columns=['X'])
     # Calculate Revenue
     data1['Revenue'] = data1['Quantity'] * data1['UnitPrice']
     return data1
+
+# 
+def plot_revenue_chart(chart_type):
+    if chart_type == 'By Hour':
+        groupby_col = 'Hour'
+        xlabel = 'Hour'
+    elif chart_type == 'By Day':
+        groupby_col = 'Day'
+        xlabel = 'Day'
+    elif chart_type == 'By Month':
+        groupby_col = 'Month'
+        xlabel = 'Month'
+    elif chart_type == 'By Year':
+        groupby_col = 'Year'
+        xlabel = 'Year'
+    elif chart_type == 'By Country':
+        groupby_col = 'Country'
+        xlabel = 'Country'
+
+    # Create the plot
+    plt.figure(figsize=(12, 6))
+    df.groupby(groupby_col)['Revenue'].sum().plot(kind='bar')
+    plt.title(f'Revenue {chart_type}')
+    plt.xlabel(xlabel)
+    plt.ylabel('Revenue')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    return plt
 
 def predict_segmentKmean_data(data1):
     # Caculate RFM values
@@ -112,7 +150,7 @@ def predict_segmentKmean_data(data1):
 # Function to predict segment using KMeans
 def predict_segmentKmean(CustomerID, data1):
     if CustomerID not in data1['CustomerID'].values:
-        return 'Không tìm thấy khách hàng'
+        return 'Customer not found'
     else:
         # Caculate RFM values
         max_date = data1['InvoiceDate'].max()
@@ -165,10 +203,61 @@ def visualize_rfm_squarify(rfm_values):
     st.plotly_chart(fig2)
 
 # GUI
-menu = ["🏠Home", "🛒Predict for New RFM Value", "👨‍💼Predict for CustomerID", "📈RFM For New Dataset"]
+menu = ["🏠Home", "👨‍🔬Insign of Retail Online dataset", "🛒Predict for New RFM Value", "👨‍💼Predict for CustomerID", "📈RFM For New Dataset"]
 choice = st.sidebar.selectbox('Menu', menu)
 if choice == '🏠Home':    
     st.markdown(home, unsafe_allow_html=True)
+
+if choice == '👨‍🔬Insign of Retail Online dataset':    
+    df1 = data.copy()
+    df = get_dataset_clean(df1)
+    st.subheader("Preview Data")
+    st.write(df.head())
+
+    # Display basic statistics
+    st.subheader("Basic Statistics")
+    st.write(df.describe())
+    #st.line_chart(df.set_index("Date")["Revenue"], use_container_width=True)
+
+    # Data exploration
+    st.subheader("Data Exploration")
+    selected_column = st.selectbox("Select Column", df.columns)
+    st.write(df[selected_column].value_counts())
+
+    # Visualize data
+    st.subheader("Data Visualization")
+
+    # Example: Plot a histogram
+    st.bar_chart(df[selected_column].value_counts())
+
+    # Streamlit UI
+    st.title('Revenue Chart')
+
+    # Dropdown for selecting chart type
+    chart_type = st.selectbox('Select chart type:', ['By Hour', 'By Day', 'By Month', 'By Year', 'By Country'])
+
+    # Display revenue chart based on selected chart type
+    plot_revenue_chart(chart_type)
+    plt = plot_revenue_chart(chart_type)
+    st.pyplot(plt)
+    st.write("""
+    ## * Retail Online * ##
+    ### ** Giải thích ** ###
+    - InvoiceNo: Mã số hóa đơn
+    - StockCode: Mã số sản phẩm
+    - Description: Mô tả sản phẩm
+    - Quantity: Số lượng hàng hóa mua trên hóa đơn
+    - UnitPrice: Giá sản phẩm
+    - InvoiceDate: Thời gian giao dịch được thực hiện
+    - CustomerID: Mã định danh khách hàng
+    - Country: Quốc gia ##
+    
+    ### ** Doanh thu ** ####
+    - Doanh thu cao nhất vào 12 trưa trong ngày.
+    - Không có doanh thu vào thứ 7, có thể do đó là ngày nghỉ của công ty
+    - Doanh thu tăng vào các tháng cuối năm, có thể do mùa lễ hội
+    - Doanh thu từ UK chiếm tỷ lệ cao nhất, chiếm 90% tổng doanh thu         
+    """)
 
 elif choice == '📈RFM For New Dataset':
     st.subheader("Select data")
@@ -214,8 +303,6 @@ elif choice == '🛒Predict for New RFM Value':
                  
 elif choice ==  '👨‍💼Predict for CustomerID':
     st.subheader("Select data")
-    flag = False
-    lines = None
     type = st.radio("Upload Customer data or Input data?", options=("Upload", "Input"))
     if type == "Upload":
         uploaded_file_1 = st.file_uploader("Choose a file", type=['txt', 'csv'])
