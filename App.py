@@ -1,4 +1,3 @@
-# ----- Loading key libraries
 import streamlit as st
 import pandas as pd
 import pickle
@@ -7,56 +6,67 @@ import numpy as np
 import matplotlib.pyplot as plt
 import squarify
 import plotly.express as px
-import ipywidgets as widgets
 
-# ----- Page setting
-st.set_page_config(page_title="Customer Segment", page_icon=":👥:", layout="centered")
+# ----- Cài đặt trang
+st.set_page_config(page_title="Phân khúc khách hàng", page_icon=":👥:", layout="centered")
 st.image("images/Customer segment.jpg")
-st.title("Data Science Project")
-st.header("Customer Segmentation in Online Retail")
+st.title("Dự án Khoa học Dữ liệu")
+st.header("Phân khúc khách hàng trong Bán lẻ trực tuyến")
 st.write("""
-         #### 👩🏻‍🏫 Lecturer: Khuat Thuy Phuong ####
-         #### 🏫 Team: Huynh Van Tai - Tran The Lam ####
+         #### 👩🏻‍🏫 Giáo viên: Khuất Thùy Phương ####
+         #### 🏫 Nhóm: Huỳnh Văn Tài - Trần Thế Lâm ####
          """)
+
 home = """
+### Phân cụm khách hàng là gì?
+* Phân cụm khách hàng (customer segmentation) là quá trình phân chia khách hàng dựa trên các đặc điểm chung như hành vi, thói quen mua sắm và sử dụng dịch vụ của họ,... để các công ty, doanh nghiệp có thể tiếp thị cho từng nhóm khách hàng một cách hiệu quả và phù hợp hơn.
+### Tại sao phải phân cụm khách hàng?
+* Bởi vì bạn không thể đối xử với họ giống như nhau, sử dụng cùng một loại nội dung, cùng một kênh truyền thông và cùng độ ưu tiên. 
+* Phân cụm giúp hiểu rõ hơn về từng nhóm khách hàng về Nhu cầu, sở thích, hành vi mua sắm,... từ đó tiếp thị hiệu quả hơn, tăng tỷ lệ chuyển đổi, tối ưu hóa chi phí marketing.
+### Phân chia cụm bằng cách nào?
+* Có thể dựa trên độ tuổi, mức thu nhập, số lượng con cái, mức chi tiêu hằng tháng, số lượng đơn hàng đã mua, vùng miền, thiết bị sử dụng (Android hay iOS),...
+* Mỗi khách hàng có hành vi và đặc điểm (attribute) khác nhau nhưng nhìn chung vẫn có mối liên hệ mục đích của chúng ta là tìm ra các mối liên hệ đó và nhóm họ lại.
+### Phân cụm khoách hàng theo RFM: 
+* Recency (R): Số ngày từ lần mua hàng cuối cùng đến hiện tại. Khách hàng càng mua hàng gần đây thì càng dễ gắn kết với thương hiệu hơn so với những người lâu rồi không quay lại mua.
+* Frequency (F): Tần suất mua hàng, tức là tổng số đơn hàng của khách hàng.
+* Monetary (M): Tổng số tiền khách hàng đã chi tiêu để mua hàng, tức là tổng giá trị của các đơn hàng của khách hàng.
+* Mô hình RFM sử dụng 3 yếu tố chính này để phân loại khách hàng thành các nhóm. 
+* Tại dự án 3, chúng tôi áp dụng trên bộ Retail Online. (Chọn để tải bộ dữ liệu)
 
-## 🏗️ **How It's Built**
+### 🏗️ **Cách Thực hiện**
 
-* Data preprocessing (e.g., data cleaning, feature engineering).
-* RFM calculation.
-* Kmeans clustering to identify customer segments.
+* Tiền xử lý dữ liệu (ví dụ: làm sạch dữ liệu, xử lý dữ liệu trùng, NA, outlier, tạo ra các feauture mới, scaler...).
+* Tính toán RFM (Recency, Frequency, Monetary).
+* Sử dụng KMeans để phân cụm khách hàng.
 
-## 🎯 **Key Features**
+### 🎯 **Tính Năng Chính**
 
-* Predict customer segments for uploaded data (optional).
-* Build customer segmentation for new dataset (optional).
-* Input specific customer IDs for segment prediction.
+* Dự đoán phân khúc khách hàng cho dữ liệu được tải lên.
+* Nhập các ID khách hàng cụ thể để dự đoán phân khúc.
+* Phân cụm khách hàng cho tập dữ liệu mới.
 
-## 🚀 **Getting Started**
-1. Upload your customer data (CSV format) or enter customer IDs.
-2. Click "Predict" to predict the segment for each customer.
-
+### 🚀 **Bắt Đầu**
+1. Tải lên dữ liệu khách hàng, sales của bạn (định dạng CSV) hoặc nhập các ID, RFM khách hàng.
+2. Nhấp vào "Dự đoán" để dự đoán phân khúc cho mỗi khách hàng.
 """
-
-# 1. ----- Read data (outside conditional block)
-@st.cache_data  # Consider allow_reload=True for updates if needed
+@st.cache_data
 def load_data():
     return pd.read_csv("data/OnlineRetail.csv", encoding='latin-1')
 data = load_data()
 
-# Convert DataFrame to bytes
+# Chuyển DataFrame thành byte
 csv_file = data.to_csv(index=False, encoding='utf-8')
-csv_file = csv_file.encode('utf-8')  # Convert to bytes
+csv_file = csv_file.encode('utf-8')  # Chuyển đổi thành byte
 
-if st.download_button(label="Download Raw Data", data=csv_file, file_name="OnlineRetail.csv", help="Click to download Raw dataset of Online Retail"):
-    st.text("Data Downloaded Successfully")
+if st.download_button(label="Tải xuống bộ dữ liệu Retail Online", data=csv_file, file_name="OnlineRetail.csv", help="Nhấp để tải xuống tập dữ liệu gốc của Retail Online"):
+    st.text("Tải Dữ liệu Thành công")
 
-# Run model
+# Chạy mô hình
 with open('./models/kmean_model.pkl', 'rb') as file:
     model_kmeans_lds6 = pickle.load(file)
 scaler = joblib.load('models/scaler.pkl')
 
-# Remove outlier
+# Loại bỏ ngoại lệ
 import pandas as pd
 def remove_outliers_iqr(df, X):
     for col in X:
@@ -67,28 +77,28 @@ def remove_outliers_iqr(df, X):
         upper_bound = q3 + (1.5 * iqr)
         outliers = df[(df[col] < lower_bound) | (df[col] > upper_bound)].shape[0]
         outliers_ = df[(df[col] < lower_bound) | (df[col] > upper_bound)]
-        print('Column {} has {} outliers'.format(col,outliers))
+        print('Cột {} có {} ngoại lệ'.format(col, outliers))
         if outliers_.shape[0] > 0:
             df.drop(outliers_.index, axis=0, inplace=True)
 
-# Clean dataset
+# Chỉnh sửa tập dữ liệu
 def get_dataset_clean(data1):
-    # Check if data1 is a DataFrame
+    # Kiểm tra xem data1 có phải là DataFrame không
     if not isinstance(data1, pd.DataFrame):
-        raise ValueError("Input is not a DataFrame")
-    # Drop rows with missing CustomerID
+        raise ValueError("Đầu vào không phải là DataFrame")
+    # Loại bỏ các dòng có CustomerID thiếu
     data1.dropna(subset=['CustomerID'], inplace=True)
-    # Remove rows where InvoiceNo starts with 'C'
+    # Loại bỏ các dòng có InvoiceNo bắt đầu bằng 'C'
     data1 = data1.loc[~data1["InvoiceNo"].str.startswith('C', na=False)]
     data1 = data1.drop(data1[data1['UnitPrice'] < 0].index)  
     data1 = data1.drop(data1[data1['Quantity'] < 0].index)
     input_col_num= ['Quantity', 'UnitPrice']
     remove_outliers_iqr(data1, input_col_num)
-    # Get the mode of UnitPrice for each StockCode
+    # Lấy mode của UnitPrice cho mỗi StockCode
     unitprice_mode = data1.groupby('StockCode')['UnitPrice'].apply(lambda x: x.mode().iloc[0])   
-    # Replace zero or null UnitPrice with mode
+    # Thay thế UnitPrice bằng mode nếu bằng 0 hoặc null
     data1['UnitPrice'] = data1.apply(lambda row: unitprice_mode[row['StockCode']] if row['UnitPrice'] == 0 or pd.isnull(row['UnitPrice']) else row['UnitPrice'], axis=1)
-    # Convert InvoiceDate to datetime and extract date
+    # Chuyển InvoiceDate thành datetime và trích xuất các feauture khác
     data1['X'] = pd.to_datetime(data1['InvoiceDate'], format='%d-%m-%Y %H:%M')
     data1['InvoiceDate'] = pd.to_datetime(data1['InvoiceDate'], format='%d-%m-%Y %H:%M').dt.date
     data1['InvoiceDate'] = data1['X'].dt.date
@@ -97,77 +107,78 @@ def get_dataset_clean(data1):
     data1['Day'] = data1['X'].dt.day_name()
     data1['Hour'] = data1['X'].dt.hour
     data1 = data1.drop(columns=['X'])
-    # Calculate Revenue
+    # Tính toán Doanh thu
     data1['Revenue'] = data1['Quantity'] * data1['UnitPrice']
     return data1
 
-# 
+# Vẽ biểu đồ theo doanh thu
 def plot_revenue_chart(chart_type):
-    if chart_type == 'By Hour':
+    if chart_type == 'Theo Giờ':
         groupby_col = 'Hour'
-        xlabel = 'Hour'
-    elif chart_type == 'By Day':
+        xlabel = 'Giờ'
+    elif chart_type == 'Theo Ngày':
         groupby_col = 'Day'
-        xlabel = 'Day'
-    elif chart_type == 'By Month':
+        xlabel = 'Ngày'
+    elif chart_type == 'Theo Tháng':
         groupby_col = 'Month'
-        xlabel = 'Month'
-    elif chart_type == 'By Year':
+        xlabel = 'Tháng'
+    elif chart_type == 'Theo Năm':
         groupby_col = 'Year'
-        xlabel = 'Year'
-    elif chart_type == 'By Country':
+        xlabel = 'Năm'
+    elif chart_type == 'Theo Quốc Gia':
         groupby_col = 'Country'
-        xlabel = 'Country'
-
-    # Create the plot
+        xlabel = 'Quốc Gia'
+    # Tạo biểu đồ
     plt.figure(figsize=(12, 6))
     df.groupby(groupby_col)['Revenue'].sum().plot(kind='bar')
-    plt.title(f'Revenue {chart_type}')
+    plt.title(f'Doanh Thu {chart_type}')
     plt.xlabel(xlabel)
-    plt.ylabel('Revenue')
+    plt.ylabel('Doanh Thu')
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     return plt
 
 def predict_segmentKmean_data(data1):
-    # Caculate RFM values
+    # Tính toán giá trị RFM
     max_date = data1['InvoiceDate'].max()
-    Recency = lambda x: (max_date - x.max()).days
-    Frequency = lambda x: len(x.unique())
-    Monetary = lambda x: round(sum(x), 2)
-    rfm_values = data1.groupby('CustomerID').agg({'InvoiceDate': Recency, 'InvoiceNo': Frequency, 'Revenue': Monetary}) 
-    rfm_values.columns = ['Recency', 'Frequency', 'Monetary']
+    recency = data1.groupby('CustomerID')['InvoiceDate'].max().apply(lambda x: (max_date - x).days)
+    frequency = data1.groupby('CustomerID')['InvoiceNo'].nunique()
+    monetary = data1.groupby('CustomerID')['Revenue'].sum()
+
+    # Tạo DataFrame RFM
+    rfm_values = pd.DataFrame({'Recency': recency, 'Frequency': frequency, 'Monetary': monetary})
     # Scale RFM values
-    rfm_values_scaled = scaler.fit_transform(rfm_values)
-    # Load model and predict cluster
+    rfm_values_scaled = scaler.transform(rfm_values)
+    # Tải mô hình và dự đoán cụm
     clusters = model_kmeans_lds6.predict(rfm_values_scaled)
-    # Map cluster to segment        
+    # Ánh xạ cụm thành phân khúc        
     segments = {0: 'Lost', 1: 'Big spender', 2: 'At risk', 3: 'Regular'}
     segment_name = [segments[i] for i in clusters]
     rfm_values['Cluster_Kmeans'] = segment_name
     return segment_name, rfm_values
     
-# Function to predict segment using KMeans
+# Dự đoán phân khúc sử dụng KMeans
 def predict_segmentKmean(CustomerID, data1):
     if CustomerID not in data1['CustomerID'].values:
-        return 'Customer not found'
+        return 'Khách hàng không tồn tại'
     else:
-        # Caculate RFM values
+        # Tính toán giá trị RFM
         max_date = data1['InvoiceDate'].max()
-        Recency = lambda x: (max_date - x.max()).days
-        Frequency = lambda x: len(x.unique())
-        Monetary = lambda x: round(sum(x), 2)
-        rfm_values = data1.groupby('CustomerID').agg({'InvoiceDate': Recency, 'InvoiceNo': Frequency, 'Revenue': Monetary}) 
-        rfm_values.columns = ['Recency', 'Frequency', 'Monetary']
+        customer_data = data1[data1['CustomerID'] == CustomerID]
+        recency = customer_data.groupby('CustomerID')['InvoiceDate'].max().apply(lambda x: (max_date - x).days)
+        frequency = customer_data.groupby('CustomerID')['InvoiceNo'].nunique()
+        monetary = customer_data.groupby('CustomerID')['Revenue'].sum()
+        # Tạo DataFrame RFM
+        rfm_values = pd.DataFrame({'Recency': recency, 'Frequency': frequency, 'Monetary': monetary})
         # Scale RFM values
-        rfm_values_scaled = scaler.fit_transform(rfm_values)
-        # Load model and predict cluster
+        rfm_values_scaled = scaler.transform(rfm_values)
+        # Tải mô hình và dự đoán cụm
         cluster = model_kmeans_lds6.predict(rfm_values_scaled)
-        # Map cluster to segment        
+        # Ánh xạ cụm thành phân khúc        
         segments = {0: 'Lost', 1: 'Big spender', 2: 'At risk', 3: 'Regular'}
-        segment_name = segments.get(cluster[0], 'Unknown segment')
-        rfm_values['Cluster_Kmeans'] = segment_name
-        return segment_name, rfm_values
+        # Tạo cột "Cluster" mới trong DataFrame data_rfm
+        rfm_values['Cluster'] = [segments.get(segment_index, 'Không xác định') for segment_index in cluster]
+        return rfm_values
 
 def visualize_rfm_squarify(rfm_values):
     rfm_agg = rfm_values.groupby('Cluster_Kmeans').agg({
@@ -181,68 +192,38 @@ def visualize_rfm_squarify(rfm_values):
     # Reset the index
     rfm_agg = rfm_agg.reset_index()
     # Change the Cluster Columns Datatype into discrete values
-    rfm_agg['Cluster_Kmeans'] = 'Cluster ' + rfm_agg['Cluster_Kmeans'].astype(str)
+    rfm_agg['Cluster_Kmeans'] = 'Nhóm ' + rfm_agg['Cluster_Kmeans'].astype(str)
 
-    colors_dict_cluster = {'Cluster0':'yellow','Cluster1':'royalblue', 'Cluster2':'cyan',
-               'Cluster3':'red', 'Cluster4':'purple', 'Cluster5':'green', 'Cluster6':'gold'}
-    # Creat chart
+    colors_dict_cluster = {'Nhóm Lost':'yellow','Nhóm Big spender':'royalblue', 'Nhóm At risk':'cyan',
+               'Nhóm Regular':'red'}
+    # Tạo biểu đồ
     fig1, ax = plt.subplots(figsize=(14, 10))
 
     squarify.plot(sizes= rfm_agg['Count'],
               text_kwargs={'fontsize':12,'weight':'bold', 'fontname':"sans serif"},
               color=colors_dict_cluster.values(),
-              label=['{} \n{:.0f} days \n{:.0f} orders \n{:.0f} $ \n{:.0f} customers ({}%)'.format(*rfm_agg.iloc[i])
+              label=['{} \n{:.0f} ngày \n{:.0f} đơn hàng \n{:.0f} $ \n{:.0f} khách hàng ({}%)'.format(*rfm_agg.iloc[i])
               for i in range(0, len(rfm_agg))], alpha=0.5 )
-    plt.title("Customers Segments Kmeans", fontsize=26, fontweight="bold")
+    plt.title("Phân khúc khách hàng Kmeans", fontsize=26, fontweight="bold")
     plt.axis('off')
 
     fig2 = px.scatter(rfm_agg, x="RecencyMean", y="MonetaryMean", size="FrequencyMean", color="Cluster_Kmeans",
            hover_name="Cluster_Kmeans", size_max=70, color_discrete_map=colors_dict_cluster)
-    # Display the plot using Streamlit
+    # Hiển thị biểu đồ bằng Streamlit
     st.pyplot(fig1)
     st.plotly_chart(fig2)
 
-# GUI
-menu = ["🏠Home", "👨‍🔬Insign of Retail Online dataset", "🛒Predict for New RFM Value", "👨‍💼Predict for CustomerID", "📈RFM For New Dataset"]
+# Giao diện người dùng
+menu = ["🏠Trang chủ", "👨‍🔬Insign dữ liệu Retail Online", "🛒Dự đoán cho dữ liệu RFM mới", "👨‍💼Dự đoán cho ID khách hàng", "📈RFM cho bộ dữ liệu mới"]
 choice = st.sidebar.selectbox('Menu', menu)
-if choice == '🏠Home':    
+if choice == "🏠Trang chủ":    
     st.markdown(home, unsafe_allow_html=True)
 
-if choice == '👨‍🔬Insign of Retail Online dataset':    
+if choice == "👨‍🔬Insign dữ liệu Retail Online":    
     df1 = data.copy()
     df = get_dataset_clean(df1)
-    st.subheader("Preview Data")
-    st.write(df.head())
-
-    # Display basic statistics
-    st.subheader("Basic Statistics")
-    st.write(df.describe())
-    #st.line_chart(df.set_index("Date")["Revenue"], use_container_width=True)
-
-    # Data exploration
-    st.subheader("Data Exploration")
-    selected_column = st.selectbox("Select Column", df.columns)
-    st.write(df[selected_column].value_counts())
-
-    # Visualize data
-    st.subheader("Data Visualization")
-
-    # Example: Plot a histogram
-    st.bar_chart(df[selected_column].value_counts())
-
-    # Streamlit UI
-    st.title('Revenue Chart')
-
-    # Dropdown for selecting chart type
-    chart_type = st.selectbox('Select chart type:', ['By Hour', 'By Day', 'By Month', 'By Year', 'By Country'])
-
-    # Display revenue chart based on selected chart type
-    plot_revenue_chart(chart_type)
-    plt = plot_revenue_chart(chart_type)
-    st.pyplot(plt)
     st.write("""
-    ## * Retail Online * ##
-    ### ** Giải thích ** ###
+    ### **Giải Thích** ###
     - InvoiceNo: Mã số hóa đơn
     - StockCode: Mã số sản phẩm
     - Description: Mô tả sản phẩm
@@ -250,69 +231,149 @@ if choice == '👨‍🔬Insign of Retail Online dataset':
     - UnitPrice: Giá sản phẩm
     - InvoiceDate: Thời gian giao dịch được thực hiện
     - CustomerID: Mã định danh khách hàng
-    - Country: Quốc gia ##
-    
-    ### ** Doanh thu ** ####
+    - Country: Quốc gia
+    """)
+    st.subheader("Dữ liệu")
+    st.write(df.head())
+    # Hiển thị thống kê cơ bản
+    st.subheader("Thống Kê Cơ Bản")
+    st.write(df.describe())
+    # Giao diện người dùng Streamlit
+    st.subheader('Biểu đồ Doanh thu')
+    # Dropdown để chọn loại biểu đồ
+    chart_type = st.selectbox('Chọn loại biểu đồ:', ['Theo Giờ', 'Theo Ngày', 'Theo Tháng', 'Theo Năm', 'Theo Quốc Gia'])
+    # Hiển thị biểu đồ doanh thu dựa trên loại biểu đồ đã chọn
+    plot_revenue_chart(chart_type)
+    plt = plot_revenue_chart(chart_type)
+    st.pyplot(plt)
+    st.write("""
+    ### Nhận xét ###
     - Doanh thu cao nhất vào 12 trưa trong ngày.
     - Không có doanh thu vào thứ 7, có thể do đó là ngày nghỉ của công ty
     - Doanh thu tăng vào các tháng cuối năm, có thể do mùa lễ hội
     - Doanh thu từ UK chiếm tỷ lệ cao nhất, chiếm 90% tổng doanh thu         
     """)
 
-elif choice == '📈RFM For New Dataset':
-    st.subheader("Select data")
+elif choice == "📈RFM cho bộ dữ liệu mới":
+    st.subheader("Upload dữ liệu: ")
+    st.write('Dữ liệu upload phải có cấu trúc tương tự Retail Online')
     df = data.copy()
-    uploaded_file = st.file_uploader("Choose a file", type=['txt', 'csv'])
+    st.write(df.head())
+    uploaded_file = st.file_uploader("Chọn tập tin", type=['csv'])
     if uploaded_file is not None:
-        st.write(f"**Predicted Segment Summary For New dataset:**")
+        st.write(f"**Phân khúc được Dự đoán cho Dữ liệu mới:**")
         df = pd.read_csv(uploaded_file, encoding='latin-1')
     else:
-        st.write(f"**Predicted Segment Summary For Retail Online dataset:**")
+        st.write(f"**Phân khúc được Dự đoán cho Retail Data:**")
     df1 = get_dataset_clean(df)
     segment_name, rfm_values = predict_segmentKmean_data(df1)
-    st.write(f"**Predicted Segment Summary:**")
-    # Display segment counts
-    segment_counts = rfm_values['Cluster_Kmeans'].value_counts().reset_index(name='Count')
-    st.write(segment_counts)
-    # Visualize RFM segments
-    st.subheader("RFM Segments Visualization")
+    st.write(f"**Tóm tắt Phân khúc Dự đoán:**")
+    st.write(rfm_values['Cluster_Kmeans'].value_counts())
+    # Trực quan hóa dữ liệu
+    st.subheader("Trực Quan Hóa Dữ liệu")
+    # Biểu đồ Treemap cho phân khúc khách hàng
+    st.write("Biểu Đồ Treemap Phân Khúc Khách Hàng")
     visualize_rfm_squarify(rfm_values)
 
-elif choice == '🛒Predict for New RFM Value':
-    st.subheader("Enter New RFM Values")
-    data_rfm = pd.DataFrame(columns=["Recency", "Frequency", "Monetary"])
-    for i in range(2):
-        st.write(f"Customer {i+1}")
-        # Tạo các slider để nhập giá trị cho cột Recency, Frequency, Monetary
-        recency = st.slider("Recency", 1, 365, 100, key=f"recency_{i}")
-        frequency = st.slider("Frequency", 1, 50, 5, key=f"frequency_{i}")
-        monetary = st.slider("Monetary", 1, 10000, 100, key=f"monetary_{i}")
-        new_customer_data = {"Recency": recency, "Frequency": frequency, "Monetary": monetary}
-        data_rfm = pd.concat([data_rfm, pd.DataFrame(new_customer_data, index=[0])], ignore_index=True)
+elif choice == "🛒Dự đoán cho dữ liệu RFM mới":
+    # Giải thích RFM và phân nhóm khách hàng
+    st.write("""
+    ### RFM
+    Số lượng nhóm khách hàng có thể thay đổi tùy thuộc vào cách định nghĩa của bạn. Ở mức đơn giản nhất chúng ta sẽ chia thành 4 nhóm dưới đây:
 
-    if st.button("Predict"):
-        try:
-            data_rfm_sca = scaler.fit_transform(data_rfm)
-            cluster = model_kmeans_lds6.predict(data_rfm_sca)
-            segments = {0: 'Lost', 1: 'Big spender', 2: 'At risk', 3: 'Regular'}
-            for i, segment_index in enumerate(cluster):
-                segment_name = segments.get(segment_index, 'Unknown segment')
-                st.write(f"**Predicted Segment {i+1}:** {segment_name}")
-        except ValueError:
-            st.error("Invalid input.")
-                 
-elif choice ==  '👨‍💼Predict for CustomerID':
-    st.subheader("Select data")
-    type = st.radio("Upload Customer data or Input data?", options=("Upload", "Input"))
-    if type == "Upload":
-        uploaded_file_1 = st.file_uploader("Choose a file", type=['txt', 'csv'])
+    1. **Nhóm Lost (Lost):** Bao gồm các khách hàng đã lâu không quay lại mua hàng, số lượng đơn hàng ít và tổng giá trị đơn hàng thấp.
+
+    2. **Nhóm Big Spender (Big Spender):** Là nhóm khách hàng có mua hàng gần đây, số lượng đơn hàng nhiều và tổng giá trị đơn hàng cao.
+
+    3. **Nhóm At Risk (At Risk):** Bao gồm các khách hàng mua hàng không thường xuyên, có nguy cơ chuyển sang nhóm "Lost" nếu không có các hoạt động kích thích mua hàng.
+
+    4. **Nhóm Regular (Regular):** Là nhóm khách hàng với tần suất và giá trị mua hàng trung bình, không quá cao cũng không quá thấp.
+    """)
+    # Tiêu đề cho phần nhập dữ liệu RFM
+    st.subheader("Lựa chọn dữ liệu")
+    type = st.radio("Tải lên tệp RFM hoặc nhập RFM?", options=("Tải lên tệp RFM", "Nhập RFM"))   
+    if type == "Tải lên tệp RFM":
+        st.write("Vui lòng tải lên tệp CSV chứa dữ liệu RFM của khách hàng. Đảm bảo rằng tệp đã tải lên có định dạng đúng.")
+        # Hiển thị bảng để hướng dẫn khách hàng nhập dữ liệu RFM
+        example_rfm_table = pd.DataFrame({
+            "Recency": ["Nhập số ngày kể từ lần mua hàng gần nhất", "Nhập số ngày kể từ lần mua hàng gần nhất"],
+            "Frequency": ["Nhập số lượng đơn hàng", "Nhập số lượng đơn hàng"],
+            "Monetary": ["Nhập tổng giá trị tiền đã chi tiêu", "Nhập tổng giá trị tiền đã chi tiêu"]
+        })
+        st.table(example_rfm_table)
+        uploaded_file = st.file_uploader("Chọn tệp", type=['csv'])
+        if uploaded_file is not None:
+            st.write(f"**Kết quả phân cụm:**")
+            data_rfm = pd.read_csv(uploaded_file, encoding='latin-1')
+            if st.button("Dự đoán"):
+                try:
+                    # Tiêu chuẩn hóa dữ liệu RFM mới
+                    data_rfm_sca = scaler.transform(data_rfm)
+                    # Dự đoán nhóm của khách hàng mới
+                    cluster = model_kmeans_lds6.predict(data_rfm_sca)
+                    # Tạo dictionary ánh xạ cluster sang segment
+                    segments = {0: 'Lost', 1: 'Big spender', 2: 'At risk', 3: 'Regular'}
+                    # Tạo cột "Cluster" mới trong DataFrame data_rfm
+                    data_rfm['Cluster'] = [segments.get(segment_index, 'Không xác định') for segment_index in cluster]
+                    data_rfm
+                    # Tạo nút để tải DataFrame về dưới dạng CSV
+                    csv_file = data_rfm.to_csv(index=False, encoding='utf-8')
+                    csv_file = csv_file.encode('utf-8')  # Chuyển đổi thành bytes
+                    if st.download_button(label="Tải về các dự đoán đã nhập", data=csv_file, file_name="RFM_predictions.csv", help="Nhấp để tải về dữ liệu dự đoán dưới dạng CSV"):
+                        st.text("Dữ liệu đã được tải về thành công.")
+                except ValueError:
+                    st.error("Dữ liệu nhập không chính xác.")
+            pass
+
+    # Tạo DataFrame để lưu giá trị RFM của khách hàng mới
+    if type == "Nhập RFM":
+        data_rfm = pd.DataFrame(columns=["Recency", "Frequency", "Monetary"])
+        # Dùng vòng lặp để tạo slider cho từng khách hàng
+        for i in range(2):
+            st.write(f"Khách hàng {i+1}")
+            # Tạo các slider để nhập giá trị cho cột Recency, Frequency, Monetary
+            recency = st.slider("Recency", 1, 365, 100, key=f"recency_{i}")
+            frequency = st.slider("Frequency", 1, 50, 5, key=f"frequency_{i}")
+            monetary = st.slider("Monetary", 1, 10000, 100, key=f"monetary_{i}")
+            new_customer_data = {"Recency": recency, "Frequency": frequency, "Monetary": monetary}
+            # Thêm dữ liệu của khách hàng mới vào DataFrame
+            data_rfm = pd.concat([data_rfm, pd.DataFrame(new_customer_data, index=[0])], ignore_index=True)
+        # Button để thực hiện dự đoán
+        if st.button("Dự đoán"):
+            try:
+                # Tiêu chuẩn hóa dữ liệu RFM mới
+                data_rfm_sca = scaler.transform(data_rfm)
+                # Dự đoán nhóm của khách hàng mới
+                cluster = model_kmeans_lds6.predict(data_rfm_sca)
+                # Tạo dictionary ánh xạ cluster sang segment
+                segments = {0: 'Lost', 1: 'Big spender', 2: 'At risk', 3: 'Regular'}
+                # Tạo cột "Cluster" mới trong DataFrame data_rfm
+                data_rfm['Cluster'] = [segments.get(segment_index, 'Không xác định') for segment_index in cluster]
+                # Hiển thị kết quả dự đoán
+                for i, segment_name in enumerate(data_rfm['Cluster']):
+                    st.write(f"**Phân khúc dự đoán cho khách hàng {i+1}:** {segment_name}")
+                # Hiển thị DataFrame chứa dữ liệu RFM của khách hàng mới và segment dự đoán
+                data_rfm
+                # Tạo nút để tải DataFrame về dưới dạng CSV
+                csv_file = data_rfm.to_csv(index=False, encoding='utf-8')
+                csv_file = csv_file.encode('utf-8')  # Chuyển đổi thành bytes
+                if st.download_button(label="Tải về các dự đoán đã nhập", data=csv_file, file_name="RFM_predictions.csv", help="Nhấp để tải về dữ liệu dự đoán dưới dạng CSV"):
+                    st.text("Dữ liệu đã được tải về thành công.")
+            except ValueError:
+                st.error("Dữ liệu nhập không chính xác.")
+        pass
+
+elif choice ==  "👨‍💼Dự đoán cho ID khách hàng":
+    st.subheader("Lựa chọn dữ liệu")
+    type = st.radio("Tải lên tệp danh sách hoặc nhập ID khách hàng?", options=("Tải lên tệp danh sách ID khác hàng", "Nhập ID khác hàng"))   
+    if type == "Tải lên tệp danh sách ID khác hàng":
+        uploaded_file_1 = st.file_uploader("Chọn tệp", type=['csv'])
         if uploaded_file_1 is not None:
             df1 = pd.read_csv(uploaded_file_1, encoding='latin-1')
             df = get_dataset_clean(df1)
             st.dataframe(df)
             lines = df.iloc[:, df.columns.get_loc('CustomerID')].astype(int)
             lines = np.array(lines)
-            st.code(lines)
             customer_ids_set = set()
             predictions = []
             for ids in lines:
@@ -320,25 +381,33 @@ elif choice ==  '👨‍💼Predict for CustomerID':
                     customer_ids_set.add(ids)
                     segment = predict_segmentKmean(ids, df)
                     predictions.append((ids, segment))
-            for ids, segment in predictions:
-                st.code(f"The predicted segment for Customer ID {ids} is: {segment}")
-
+                    segment                    
+            # for ids, segment in predictions:
+            #     st.write(f"**Phân khúc dự đoán cho Customer ID {ids} là:")
+            #     segment
             if not customer_ids_set:
-                st.error("Invalid input: ")
-           
-    if type == "Input":
+                st.error("Dữ liệu không hợp lệ: Không có Customer ID nào được cung cấp.")     
+    if type == "Nhập ID khác hàng":
         df = data.copy()
         df = get_dataset_clean(df)
-        CustomerID = st.text_area(label="Input CustomerID (separated by commas):")
-        predict_button = st.button("Predict")
+        st.write("""
+            #### Hướng dẫn:
+            1. Nhập ID khách hàng (CustomerID) vào ô tìm kiếm, mỗi ID cách nhau bằng dấu phẩy.
+            2. Nhấn nút "Dự đoán" để xem kết quả.
+            #### Ví dụ:
+            - Bước 1: Nhập 15780, 12468, 28769 vào ô tìm kiếm
+            - Bước 2: Nhấn nhút Dự đoán
+        """)
+        CustomerID = st.text_area(label="Nhập CustomerID (phân tách bằng dấu phẩy):")
+        predict_button = st.button("Dự đoán")
         if predict_button:
             if CustomerID:
                 try:
                     CustomerID = [int(id.strip()) for id in CustomerID.split(",")]
                     lines = np.array(CustomerID)
-                    st.code(lines)
                     for CustomerID in lines:
                         segment = predict_segmentKmean(CustomerID, df)
-                        st.code(f"The predicted segment for Customer ID {CustomerID} is: " + str(segment))
+                        st.code(f"Dự đoán phân cụm ID Customer {CustomerID} là: ")
+                        segment
                 except ValueError:
-                    st.error("Invalid input: Please enter integers separated by commas.")
+                    st.error("Dữ liệu không hợp lê, vui lòng nhập lại.")
